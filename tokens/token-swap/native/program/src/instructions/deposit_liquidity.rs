@@ -47,6 +47,9 @@ pub fn process_deposit_liquidity(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
+    if pool_account.owner != program_id {
+        return Err(ProgramError::IncorrectProgramId);
+    }
 
     let pool = Pool::try_from_slice(&pool_account.data.borrow())?;
     if pool.mint_a != *mint_a.key || pool.mint_b != *mint_b.key {
@@ -61,11 +64,40 @@ pub fn process_deposit_liquidity(
         return Err(SwapError::AccountMismatch.into());
     }
 
+    // Verify Mint Liquidity PDA matches expected pool LP mint
+    let (expected_mint_liquidity, _) = Pubkey::find_program_address(
+        &[pool.amm.as_ref(), mint_a.key.as_ref(), mint_b.key.as_ref(), LIQUIDITY_SEED],
+        program_id,
+    );
+    if expected_mint_liquidity != *mint_liquidity.key {
+        return Err(SwapError::AccountMismatch.into());
+    }
+
+    // Verify pool token accounts (ATAs)
+    let expected_pool_a = spl_associated_token_account_interface::address::get_associated_token_address(
+        pool_authority.key,
+        mint_a.key,
+    );
+    if expected_pool_a != *pool_account_a.key {
+        return Err(SwapError::AccountMismatch.into());
+    }
+
+    let expected_pool_b = spl_associated_token_account_interface::address::get_associated_token_address(
+        pool_authority.key,
+        mint_b.key,
+    );
+    if expected_pool_b != *pool_account_b.key {
+        return Err(SwapError::AccountMismatch.into());
+    }
+
     let dep_a_state = TokenAccountState::unpack(&depositor_account_a.data.borrow())?;
     let dep_b_state = TokenAccountState::unpack(&depositor_account_b.data.borrow())?;
     let pool_a_state = TokenAccountState::unpack(&pool_account_a.data.borrow())?;
     let pool_b_state = TokenAccountState::unpack(&pool_account_b.data.borrow())?;
 
+    if pool_a_state.owner != *pool_authority.key || pool_b_state.owner != *pool_authority.key {
+        return Err(SwapError::AccountMismatch.into());
+    }
 
     let mut amount_a = if args.amount_a > dep_a_state.amount { dep_a_state.amount } else { args.amount_a };
     let mut amount_b = if args.amount_b > dep_b_state.amount { dep_b_state.amount } else { args.amount_b };

@@ -36,6 +36,15 @@ import {
 
 const LAMPORTS_PER_SOL = 1_000_000_000n;
 
+function getTokenBalance(svm: LiteSVM, address: any): bigint {
+    const acc = svm.getAccount(address);
+    assert.isNotNull(acc, `Account ${address} should exist`);
+    const data = new Uint8Array(acc!.data);
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    return view.getBigUint64(64, true);
+}
+
+
 describe('Token Swap Native', () => {
     const svm = new LiteSVM();
     let payer: KeyPairSigner;
@@ -223,6 +232,11 @@ describe('Token Swap Native', () => {
             programId: programId.address,
         }));
 
+        // Assert deposit balances and LP minting
+        assert.equal(getTokenBalance(svm, poolAtaA), 1_000_000n, "Pool should hold 1,000,000 token A");
+        assert.equal(getTokenBalance(svm, poolAtaB), 1_000_000n, "Pool should hold 1,000,000 token B");
+        assert.equal(getTokenBalance(svm, payerAtaLp), 999_900n, "Payer should receive 999,900 LP tokens (100 locked)");
+
         // Trader swaps token A for token B
         const [traderAtaA] = await findAssociatedTokenPda({ mint: mintA.address, owner: trader.address, tokenProgram: TOKEN_PROGRAM_ADDRESS });
         const [traderAtaB] = await findAssociatedTokenPda({ mint: mintB.address, owner: trader.address, tokenProgram: TOKEN_PROGRAM_ADDRESS });
@@ -251,7 +265,15 @@ describe('Token Swap Native', () => {
             programId: programId.address,
         }));
 
-        console.log("Token swap executed successfully!");
+        // Assert trader and pool balances after swap
+        assert.equal(getTokenBalance(svm, traderAtaA), 40_000n, "Trader spent 10,000 token A");
+        assert.equal(getTokenBalance(svm, traderAtaB), 9871n, "Trader received 9,871 token B after 30 bps fee");
+        assert.equal(getTokenBalance(svm, poolAtaA), 1_010_000n, "Pool reserve A increased by 10,000");
+        assert.equal(getTokenBalance(svm, poolAtaB), 990_129n, "Pool reserve B decreased by 9,871");
+
+
+
+                console.log("Token swap executed successfully!");
 
         // 5. Test Withdraw Liquidity
         await sendTx(buildWithdrawLiquidity({
@@ -271,6 +293,11 @@ describe('Token Swap Native', () => {
             programId: programId.address,
         }));
 
-        console.log("Liquidity withdrawal executed successfully!");
+        // Assert balances after withdrawal
+        assert.equal(getTokenBalance(svm, payerAtaLp), 949_900n, "Burned 50,000 LP tokens");
+        assert.equal(getTokenBalance(svm, poolAtaA), 959_500n, "Pool reserve A reduced by 50,500");
+        assert.equal(getTokenBalance(svm, poolAtaB), 940_623n, "Pool reserve B reduced by 49,506");
+
+                console.log("Liquidity withdrawal executed successfully!");
     });
 });

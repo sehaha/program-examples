@@ -1,5 +1,6 @@
 use {
     crate::{constants::*, error::*, state::*},
+    borsh::BorshDeserialize,
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
@@ -40,6 +41,13 @@ pub fn process_create_pool(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
         return Err(SwapError::InvalidMint.into());
     }
 
+    // Verify AMM account owner and data structure
+    if amm_account.owner != program_id {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+    let _amm = Amm::try_from_slice(&amm_account.data.borrow())
+        .map_err(|_| ProgramError::InvalidAccountData)?;
+
     // Verify Pool PDA
     let (expected_pool_key, pool_bump) = Pubkey::find_program_address(
         &[amm_account.key.as_ref(), mint_a.key.as_ref(), mint_b.key.as_ref()],
@@ -64,6 +72,23 @@ pub fn process_create_pool(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
         program_id,
     );
     if expected_mint_liquidity != *mint_liquidity.key {
+        return Err(SwapError::AccountMismatch.into());
+    }
+
+    // Verify Pool Token ATAs match expected authority derivation
+    let expected_pool_a = spl_associated_token_account_interface::address::get_associated_token_address(
+        &expected_authority_key,
+        mint_a.key,
+    );
+    if expected_pool_a != *pool_account_a.key {
+        return Err(SwapError::AccountMismatch.into());
+    }
+
+    let expected_pool_b = spl_associated_token_account_interface::address::get_associated_token_address(
+        &expected_authority_key,
+        mint_b.key,
+    );
+    if expected_pool_b != *pool_account_b.key {
         return Err(SwapError::AccountMismatch.into());
     }
 
