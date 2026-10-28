@@ -4,6 +4,7 @@ import {
     createAssociatedTokenAccountInstruction,
     createInitializeMint2Instruction,
     createMintToInstruction,
+    createTransferInstruction,
     getAssociatedTokenAddressSync,
     MINT_SIZE,
     TOKEN_PROGRAM_ID,
@@ -285,5 +286,84 @@ describe('fundraiser litesvm', () => {
             "contributor's full original balance should be restored",
         );
         assert.isNull(client.getAccount(contributor), 'the Contributor account should be closed');
+    });
+
+    it('Teardown is rejected for unauthorized caller', async () => {
+        const vault = getAssociatedTokenAddressSync(mint, fundraiser, true);
+        const stranger = anchor.web3.Keypair.generate();
+        client.airdrop(stranger.publicKey, 1_000_000_000n);
+
+        await expectAnchorError(
+            program.methods
+                .teardown()
+                .accountsPartial({
+                    maker: stranger.publicKey,
+                    mintToRaise: mint,
+                    fundraiser,
+                    vault,
+                    makerAta: getAssociatedTokenAddressSync(mint, stranger.publicKey),
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                })
+                .signers([stranger])
+                .rpc(),
+            'ConstraintSeeds',
+        );
+    });
+
+    it('Teardown sweeps stray vault dust and closes vault + fundraiser recovering rent', async () => {
+        const vault = getAssociatedTokenAddressSync(mint, fundraiser, true);
+        const makerATA = getAssociatedTokenAddressSync(mint, maker.publicKey);
+
+        // Stranger sends stray unrecorded tokens directly to vault
+        const strayAmount = 500_000n;
+        const transferIx = createTransferInstruction(
+            contributorATA,
+            vault,
+            provider.publicKey,
+            strayAmount,
+        );
+        const transferTx = new anchor.web3.Transaction().add(transferIx);
+        transferTx.feePayer = provider.publicKey;
+        transferTx.recentBlockhash = client.latestBlockhash();
+        transferTx.sign(wallet.payer);
+        client.sendTransaction(transferTx);
+        client.expireBlockhash();
+
+        assert.strictEqual(tokenBalance(vault), strayAmount);
+
+        const makerLamportsBefore = client.getAccount(maker.publicKey)!.lamports;
+
+        // Maker executes teardown on expired failed campaign
+        const tx = await program.methods
+            .teardown()
+            .accountsPartial({
+                maker: maker.publicKey,
+                mintToRaise: mint,
+                fundraiser,
+                vault,
+                makerAta: makerATA,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            })
+            .signers([maker])
+            .rpc();
+
+        console.log('Teardown transaction signature', tx);
+
+        // 1. Verify stray tokens were swept to maker
+        assert.strictEqual(tokenBalance(makerATA), strayAmount, 'maker ATA should receive swept stray vault tokens');
+
+        // 2. Verify vault token account is closed (rent recovered)
+        assert.isNull(client.getAccount(vault), 'vault token account should be closed after teardown');
+
+        // 3. Verify fundraiser PDA account is closed (rent recovered)
+        assert.isNull(client.getAccount(fundraiser), 'fundraiser PDA should be closed after teardown');
+
+        // 4. Verify maker received rent lamports
+        const makerLamportsAfter = client.getAccount(maker.publicKey)!.lamports;
+        assert.isTrue(makerLamportsAfter > makerLamportsBefore, 'maker should recover rent lamports from closed accounts');
     });
 });

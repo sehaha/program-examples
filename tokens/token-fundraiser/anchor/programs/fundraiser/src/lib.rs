@@ -1,3 +1,4 @@
+#![allow(clippy::diverging_sub_expression)]
 use anchor_lang::prelude::*;
 
 declare_id!("Eoiuq1dXvHxh6dLx3wh9gj8kSAUpga11krTrbfF5XYsC");
@@ -5,7 +6,7 @@ declare_id!("Eoiuq1dXvHxh6dLx3wh9gj8kSAUpga11krTrbfF5XYsC");
 mod constants;
 mod error;
 mod instructions;
-mod state;
+pub mod state;
 
 pub use constants::*;
 use error::*;
@@ -35,6 +36,12 @@ pub mod fundraiser {
 
     pub fn refund(ctx: Context<Refund>) -> Result<()> {
         ctx.accounts.refund()?;
+
+        Ok(())
+    }
+
+    pub fn teardown(ctx: Context<Teardown>) -> Result<()> {
+        ctx.accounts.teardown()?;
 
         Ok(())
     }
