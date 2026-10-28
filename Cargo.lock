@@ -7,11 +7,6 @@ name = "account-data-anchor-program"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -388,11 +383,6 @@ name = "anchor-realloc"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -955,11 +945,6 @@ name = "carnival"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -1014,11 +999,6 @@ name = "checking-accounts-anchor-program-example"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -1102,11 +1082,6 @@ name = "close-account-program"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -1183,11 +1158,6 @@ name = "counter_anchor"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -1247,11 +1217,6 @@ name = "create-system-account"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -1782,11 +1747,6 @@ name = "hand"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -1836,11 +1796,6 @@ name = "hello-solana-anchor"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -2550,11 +2505,6 @@ name = "pda-rent-payer"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -2726,11 +2676,6 @@ name = "processing-instructions"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -2800,11 +2745,6 @@ name = "program-derived-addresses-program"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]
@@ -6194,11 +6134,6 @@ name = "transfer-sol"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "litesvm",
- "solana-keypair",
- "solana-message",
- "solana-signer",
- "solana-transaction",
 ]
 
 [[package]]

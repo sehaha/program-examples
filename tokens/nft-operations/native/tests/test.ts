@@ -37,7 +37,7 @@ const CREATE_COLLECTION = 0;
 const MINT_NFT = 1;
 const VERIFY_COLLECTION = 2;
 
-// The compiled program artifacts live in ./fixtures: the pinocchio program is
+// The compiled program artifacts live in ./fixtures: the native program is
 // built there by `build-and-test`, and token_metadata.so is dumped from mainnet
 // by prepare.mjs. The npm scripts always run from the package root.
 const FIXTURES = path.join(process.cwd(), 'tests', 'fixtures');
@@ -186,6 +186,13 @@ describe('NFT Operations (Native)', () => {
         const editionAccount = svm.getAccount(masterEdition);
         if (!editionAccount?.exists) throw new Error('NFT master edition not found');
         assert.equal(editionAccount.programAddress, TOKEN_METADATA_PROGRAM_ID);
+
+        // Assert that the collection reference exists in metadata and is unverified (verified = 0)
+        const collectionMintBytes = Buffer.from(addressEncoder.encode(collectionMint.address));
+        const data = Buffer.from(metadataAccount.data);
+        const index = data.indexOf(collectionMintBytes);
+        assert.isAbove(index, 0, 'Collection mint not found in metadata');
+        assert.equal(data[index - 1], 0, 'Collection should not yet be verified');
     });
 
     it('Verifies the NFT as part of the collection', async () => {
@@ -216,5 +223,12 @@ describe('NFT Operations (Native)', () => {
         const metadataAccount = svm.getAccount(metadata);
         if (!metadataAccount?.exists) throw new Error('NFT metadata not found');
         assert.equal(metadataAccount.programAddress, TOKEN_METADATA_PROGRAM_ID);
+
+        // Assert that the collection reference is now marked verified (verified = 1)
+        const collectionMintBytes = Buffer.from(addressEncoder.encode(collectionMint.address));
+        const data = Buffer.from(metadataAccount.data);
+        const index = data.indexOf(collectionMintBytes);
+        assert.isAbove(index, 0, 'Collection mint not found in metadata');
+        assert.equal(data[index - 1], 1, 'Collection should now be marked verified');
     });
 });
