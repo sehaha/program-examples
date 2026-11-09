@@ -1,0 +1,16 @@
+# 微信小程序短剧去广告核心规则
+DOMAIN-SUFFIX,ad.weixin.qq.com,REJECT
+DOMAIN-SUFFIX,wxsnsdy.wxs.qq.com,REJECT
+DOMAIN-SUFFIX,wxsnsdythumb.wxs.qq.com,REJECT
+DOMAIN-KEYWORD,gdt.qq.com,REJECT
+DOMAIN-KEYWORD,ugdtimg,REJECT
+DOMAIN-SUFFIX,adservice.sigmob.cn,REJECT
+DOMAIN-KEYWORD,pgdt,REJECT
+DOMAIN-SUFFIX,oth.str.adtive.com,REJECT
+DOMAIN-SUFFIX,ad.qq.com,REJECT
+DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,qzs.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,tmead.y.qq.com,REJECT
+DOMAIN-KEYWORD,toutiao-ad,REJECT
+DOMAIN-KEYWORD,pangolin-sdk,REJECT
+DOMAIN-SUFFIX,adsmind.ugdtimg.com,REJECT
